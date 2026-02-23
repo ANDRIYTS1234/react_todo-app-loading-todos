@@ -1,5 +1,7 @@
+import cn from 'classnames';
 import { Filter } from '../types/Filter';
 import { Todo } from '../types/Todo';
+
 
 interface FooterProps {
   activeTodos: Todo[];
