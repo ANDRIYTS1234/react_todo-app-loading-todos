@@ -6,11 +6,69 @@ import { USER_ID, getTodos } from './api/todos';
 import { useState, useEffect } from 'react';
 import { Todo } from './types/Todo';
 import cn from 'classnames';
+import { Filter } from './types/Filter';
+import { Footer } from './components/Footer';
+
+interface TodoItemProps {
+  todo: Todo;
+}
+
+export const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
+  return (
+    <div
+      data-cy="Todo"
+      className={cn('todo', { completed: todo.completed })}
+      key={todo.id}
+    >
+      <label className="todo__status-label" htmlFor={`todo-${todo.id}`}>
+        <input
+          id={`todo-${todo.id}`}
+          data-cy="TodoStatus"
+          type="checkbox"
+          className="todo__status"
+          checked={todo.completed}
+        />
+      </label>
+
+      <span data-cy="TodoTitle" className="todo__title">
+        {todo.title}
+      </span>
+
+      {/* Remove button appears only on hover */}
+      <button type="button" className="todo__remove" data-cy="TodoDelete">
+        ×
+      </button>
+
+      {/* overlay will cover the
+                  todo while it is being deleted or updated */}
+      <div data-cy="TodoLoader" className="modal overlay">
+        {/* eslint-disable-next-line max-len */}
+        <div className="modal-background has-background-white-ter" />
+        <div className="loader" />
+      </div>
+    </div>
+  );
+};
+
+interface TodoListProps {
+  filteredTodos: Todo[];
+}
+
+export const TodoList: React.FC<TodoListProps> = ({ filteredTodos }) => {
+  return (
+    <section className="todoapp__main" data-cy="TodoList">
+      {/* This is a completed todo */}
+      {filteredTodos.map(todo => (
+        <TodoItem todo={todo} key={todo.id} />
+      ))}
+    </section>
+  );
+};
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState<Filter>(Filter.All);
 
   const activeTodos = todos.filter(todo => !todo.completed);
 
@@ -20,9 +78,9 @@ export const App: React.FC = () => {
   const hasCompleted = todos.some(todo => todo.completed);
 
   const filteredTodos = todos.filter(todo => {
-    if (filter === 'active') {
+    if (filter === Filter.Active) {
       return !todo.completed;
-    } else if (filter === 'completed') {
+    } else if (filter === Filter.Completed) {
       return todo.completed;
     } else {
       return true;
@@ -81,96 +139,14 @@ export const App: React.FC = () => {
 
         {todos.length > 0 && (
           <>
-            <section className="todoapp__main" data-cy="TodoList">
-              {/* This is a completed todo */}
-              {filteredTodos.map(todo => (
-                <div
-                  data-cy="Todo"
-                  className={cn('todo', { completed: todo.completed })}
-                  key={todo.id}
-                >
-                  <label className="todo__status-label">
-                    <input
-                      data-cy="TodoStatus"
-                      type="checkbox"
-                      className="todo__status"
-                      checked={todo.completed}
-                    />
-                  </label>
+            <TodoList filteredTodos={filteredTodos} />
 
-                  <span data-cy="TodoTitle" className="todo__title">
-                    {todo.title}
-                  </span>
-
-                  {/* Remove button appears only on hover */}
-                  <button
-                    type="button"
-                    className="todo__remove"
-                    data-cy="TodoDelete"
-                  >
-                    ×
-                  </button>
-
-                  {/* overlay will cover the
-                  todo while it is being deleted or updated */}
-                  <div data-cy="TodoLoader" className="modal overlay">
-                    {/* eslint-disable-next-line max-len */}
-                    <div className="modal-background has-background-white-ter" />
-                    <div className="loader" />
-                  </div>
-                </div>
-              ))}
-            </section>
-
-            <footer className="todoapp__footer" data-cy="Footer">
-              <span className="todo-count" data-cy="TodosCounter">
-                {activeTodos.length} items left
-              </span>
-
-              {/* Active link should have the 'selected' class */}
-              <nav className="filter" data-cy="Filter">
-                <a
-                  href="#/"
-                  className={cn('filter__link', { selected: filter === 'all' })}
-                  data-cy="FilterLinkAll"
-                  onClick={() => setFilter('all')}
-                >
-                  All
-                </a>
-
-                <a
-                  href="#/active"
-                  className={cn('filter__link', {
-                    selected: filter === 'active',
-                  })}
-                  data-cy="FilterLinkActive"
-                  onClick={() => setFilter('active')}
-                >
-                  Active
-                </a>
-
-                <a
-                  href="#/completed"
-                  className={cn('filter__link', {
-                    selected: filter === 'completed',
-                  })}
-                  data-cy="FilterLinkCompleted"
-                  onClick={() => setFilter('completed')}
-                >
-                  Completed
-                </a>
-              </nav>
-
-              {/* this button should be disabled if there are no completed todos */}
-              <button
-                type="button"
-                className="todoapp__clear-completed"
-                data-cy="ClearCompletedButton"
-                disabled={!hasCompleted}
-              >
-                Clear completed
-              </button>
-            </footer>
+            <Footer
+              activeTodos={activeTodos}
+              filter={filter}
+              onClick={setFilter}
+              hasCompleted={hasCompleted}
+            />
           </>
         )}
 
@@ -199,7 +175,7 @@ export const App: React.FC = () => {
         <br />
         Title should not be empty
         <br />
-        Unable to add a todo
+        Unable to add a todo``
         <br />
         Unable to delete a todo
         <br />
